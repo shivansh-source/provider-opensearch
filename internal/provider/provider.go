@@ -74,9 +74,17 @@ func (p *Provider) Sync(c *controller.Context) error {
 		return err
 	}
 
+	var monitoringCfg opensearchv1.MonitoringConfig
+	if monitoring, ok := c.Instance().Spec.Components[common.ComponentMonitoring]; ok {
+		monitoringCfg, err = buildMonitoringConfig(c, monitoring)
+		if err != nil {
+			return err
+		}
+	}
+
 	cluster := &opensearchv1.OpenSearchCluster{
 		ObjectMeta: c.ObjectMeta(c.Name()),
-		Spec:       buildClusterSpec(c.Name(), engine, version, image, additionalConfig, snapshotRepos, keystore, backupPlugins),
+		Spec:       buildClusterSpec(c.Name(), engine, version, image, additionalConfig, snapshotRepos, keystore, backupPlugins, monitoringCfg),
 	}
 
 	if dashboards, ok := c.Instance().Spec.Components[common.ComponentDashboards]; ok {
@@ -110,6 +118,12 @@ func (p *Provider) Sync(c *controller.Context) error {
 	}
 	if err := mirrorScheduledBackups(c); err != nil {
 		return err
+	}
+
+	if _, ok := c.Instance().Spec.Components[common.ComponentMonitoring]; ok {
+		if err := syncMonitoringUser(c); err != nil {
+			return err
+		}
 	}
 
 	// Instance.spec.dataSource seeds a new Instance from an existing Backup.

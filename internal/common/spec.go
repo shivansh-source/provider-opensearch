@@ -14,8 +14,14 @@ const (
 	// ComponentDashboards is the optional OpenSearch Dashboards component.
 	ComponentDashboards = "dashboards"
 
+	// ComponentMonitoring is the optional Prometheus metrics exporter
+	// component: it toggles general.monitoring on the OpenSearchCluster, not
+	// a separately deployed workload.
+	ComponentMonitoring = "monitoring"
+
 	ComponentTypeOpensearch = "opensearch"
 	ComponentTypeDashboards = "dashboards"
+	ComponentTypeMonitoring = "monitoring"
 
 	// TopologyStandard is the default topology: a single node pool of
 	// cluster-manager eligible data nodes.

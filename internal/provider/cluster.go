@@ -60,6 +60,7 @@ func buildClusterSpec(
 	snapshotRepos []opensearchv1.SnapshotRepoConfig,
 	keystore []opensearchv1.KeystoreValue,
 	backupPlugins []string,
+	monitoring opensearchv1.MonitoringConfig,
 ) opensearchv1.ClusterSpec {
 	general := opensearchv1.GeneralConfig{
 		Version:              version,
@@ -68,6 +69,7 @@ func buildClusterSpec(
 		SnapshotRepositories: snapshotRepos,
 		Keystore:             keystore,
 		PluginsList:          backupPlugins,
+		Monitoring:           monitoring,
 		// The PVCs hold the only copy of the data; drop them with the cluster
 		// but keep them on scale-down so scaling back up reuses them.
 		PersistentVolumeClaimRetentionPolicy: &appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy{

@@ -42,6 +42,7 @@ flowchart LR
 | `clusterManager` | `opensearch` | `cluster_manager` | M4 |
 | `coordinator` | `opensearch` | none (coordinating-only) | M4 |
 | `dashboards` | `dashboards` | — (OpenSearch Dashboards deployment) | M2 |
+| `monitoring` | `monitoring` | — (`general.monitoring` toggle, not a deployed workload) | M5 |
 
 | Topology | Components | Introduced in |
 |---|---|---|
@@ -233,9 +234,20 @@ For larger / production clusters: separate cluster-manager quorum from data node
 OpenEverest `MonitoringConfig` currently supports only **PMM**, which has no native OpenSearch
 integration. The operator ships the Prometheus exporter plugin plus a `ServiceMonitor`.
 
-- [ ] Decide the integration path with OpenEverest core (new `MonitoringConfig` type vs. PMM external exporter)
-- [ ] Optional `monitoring` component → `general.monitoring` (exporter plugin, dedicated low-privilege monitoring user, scrape interval)
-- [ ] Air-gapped support via `pluginUrl`
+- [x] ~~Decide the integration path with OpenEverest core (new `MonitoringConfig` type vs. PMM external exporter)~~
+  Resolved: Prometheus/VMetrics via the operator's own exporter, not a new core `MonitoringConfig` type (confirmed
+  with Sergey) — the `monitoring` component is entirely provider-local, no core `MonitoringConfig` CR involved.
+- [x] Optional `monitoring` component → `general.monitoring`: `Enable: true`, `MonitoringUserSecret`, optional
+  `ScrapeInterval`/`PluginURL` (air-gapped) from component parameters. The operator installs the
+  opensearch-prometheus-exporter plugin matching the cluster's own version and creates the `ServiceMonitor` itself
+  (tolerating a missing ServiceMonitor CRD) — this provider only supplies credentials and overrides.
+- [x] Dedicated low-privilege monitoring user: `syncMonitoringUser` creates an OpenSearch security role scoped to
+  the `cluster_monitor` and `indices_monitor` action groups only (the permission set the exporter plugin's own docs
+  call for), an internal user, and a role mapping, via the same REST client used for snapshots/restore. Verified
+  live: the dedicated user gets `200` scraping `/_prometheus/metrics` and `/_cluster/health`, but `403` on a
+  document search or index create — confirming it is genuinely read-only/monitor-scoped, not accidentally broad.
+- [x] Air-gapped support via `pluginUrl` — passed straight through to `general.monitoring.pluginUrl`; not
+  live-tested against an actual air-gapped mirror, only confirmed the field reaches the CR.
 
 | Capability | Status |
 |---|---|

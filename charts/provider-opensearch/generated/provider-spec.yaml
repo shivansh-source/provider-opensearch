@@ -27,6 +27,16 @@ spec:
               type: string
           type: object
       type: opensearch
+    monitoring:
+      parametersSchema:
+        openAPIV3Schema:
+          properties:
+            pluginUrl:
+              type: string
+            scrapeInterval:
+              type: string
+          type: object
+      type: monitoring
   defaultVersion: 3.8.0
   release:
     version: 0.1.0
@@ -59,6 +69,11 @@ spec:
                 storage: {}
               required:
                 - storage
+        monitoring:
+          optional: true
+          supportedFields:
+            openAPIV3Schema:
+              properties: {}
   uiSchema:
     standard:
       sections:

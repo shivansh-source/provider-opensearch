@@ -64,7 +64,7 @@ for what is planned next.
 | Custom configuration | ✅ | `spec.components.engine.parameters.configuration`; an `opensearch.yml` fragment (YAML), merged into `additionalConfig`. TLS, security plugin, and discovery keys are rejected |
 | External access | ✅ | `spec.components.engine.service`; annotations on the main service, `LoadBalancer`/`NodePort` via a separate `<name>-exposed` service |
 | Dashboards | ✅ | Optional `dashboards` component; see [Configuration](#configuration) |
-| Monitoring | ❌ | |
+| Monitoring | ✅ | Optional `monitoring` component: Prometheus exporter plugin + dedicated low-privilege scrape user; see [Configuration](#configuration) |
 | TLS | ✅ | Operator-generated certificates for transport and HTTP, always on |
 
 Stateful workloads additionally report:
@@ -227,6 +227,17 @@ Worth knowing:
   over them in place (same names; no rename pattern, no empty-cluster requirement). The same
   path seeds a brand-new Instance: set `spec.dataSource` on the Instance to a `Backup` and the
   runtime creates the restore automatically. Point-in-time recovery is not supported.
+- **Monitoring** — an optional `monitoring` component sets `general.monitoring.enable: true`;
+  the operator installs the `opensearch-prometheus-exporter` plugin matching the cluster's own
+  version and creates a `ServiceMonitor` itself (silently skipped if the prometheus-operator
+  CRDs aren't installed). The provider creates a dedicated low-privilege OpenSearch user
+  (role scoped to the `cluster_monitor` and `indices_monitor` action groups only — no document
+  read/write access) and points `general.monitoring.monitoringUserSecret` at its credentials, so
+  the ServiceMonitor scrapes with that user instead of admin. Optional parameters:
+  `spec.components.monitoring.parameters.scrapeInterval` (default `30s`) and `.pluginUrl` to
+  override the plugin download URL for air-gapped clusters. There is no UI form field for it
+  yet (API/CLI only), matching dashboards. Credentials live in the
+  `<name>-monitoring-password` secret.
 
 ## Development
 

@@ -107,7 +107,7 @@ func TestBuildClusterSpec(t *testing.T) {
 	engine := validEngine()
 	engine.Storage.StorageClass = ptr.To("fast")
 
-	spec := buildClusterSpec(testName, engine, "3.8.0", "opensearchproject/opensearch:3.8.0", nil, nil, nil, nil)
+	spec := buildClusterSpec(testName, engine, "3.8.0", "opensearchproject/opensearch:3.8.0", nil, nil, nil, nil, opensearchv1.MonitoringConfig{})
 
 	assert.Equal(t, "3.8.0", spec.General.Version)
 	assert.Equal(t, testName, spec.General.ServiceName)
@@ -132,7 +132,7 @@ func TestBuildClusterSpec(t *testing.T) {
 }
 
 func TestBuildClusterSpecDefaults(t *testing.T) {
-	spec := buildClusterSpec(testName, corev1alpha1.ComponentSpec{}, "3.8.0", "", nil, nil, nil, nil)
+	spec := buildClusterSpec(testName, corev1alpha1.ComponentSpec{}, "3.8.0", "", nil, nil, nil, nil, opensearchv1.MonitoringConfig{})
 
 	assert.Nil(t, spec.General.ImageSpec, "an empty image lets the operator derive it from the version")
 	assert.Equal(t, defaultReplicas, spec.NodePools[0].Replicas)
@@ -292,6 +292,32 @@ func TestSync(t *testing.T) {
 		require.NotNil(t, got.Spec.Dashboards.Tls)
 		assert.True(t, got.Spec.Dashboards.Tls.Enable)
 		assert.True(t, got.Spec.Dashboards.Tls.Generate)
+	})
+
+	t.Run("monitoring not requested: disabled", func(t *testing.T) {
+		c, cl := newTestContext(t, testInstance(validEngine()))
+
+		require.NoError(t, New().Sync(c))
+
+		got := &opensearchv1.OpenSearchCluster{}
+		require.NoError(t, cl.Get(context.Background(), client.ObjectKey{Namespace: testNamespace, Name: testName}, got))
+		assert.False(t, got.Spec.General.Monitoring.Enable)
+	})
+
+	t.Run("monitoring requested: enabled and wired, cluster not reachable yet is not an error", func(t *testing.T) {
+		in := testInstance(validEngine())
+		in.Spec.Components[common.ComponentMonitoring] = corev1alpha1.ComponentSpec{
+			Parameters: &runtime.RawExtension{Raw: []byte(`{"scrapeInterval":"15s"}`)},
+		}
+		c, cl := newTestContext(t, in)
+
+		require.NoError(t, New().Sync(c))
+
+		got := &opensearchv1.OpenSearchCluster{}
+		require.NoError(t, cl.Get(context.Background(), client.ObjectKey{Namespace: testNamespace, Name: testName}, got))
+		assert.True(t, got.Spec.General.Monitoring.Enable)
+		assert.Equal(t, monitoringSecretName(testName), got.Spec.General.Monitoring.MonitoringUserSecret)
+		assert.Equal(t, "15s", got.Spec.General.Monitoring.ScrapeInterval)
 	})
 
 	t.Run("data source: reconciles without erroring when the source is not ready yet", func(t *testing.T) {

@@ -11,6 +11,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	opensearchv1 "github.com/opensearch-project/opensearch-k8s-operator/opensearch-operator/api/opensearch.org/v1"
+
 	corev1alpha1 "github.com/openeverest/openeverest/v2/api/core/v1alpha1"
 )
 
@@ -136,7 +138,7 @@ func TestBuildClusterSpecServiceAnnotations(t *testing.T) {
 	engine := validEngine()
 	engine.Service = &corev1alpha1.Service{Annotations: map[string]string{"example.com/scrape": "true"}}
 
-	spec := buildClusterSpec(testName, engine, "3.8.0", "", nil, nil, nil, nil)
+	spec := buildClusterSpec(testName, engine, "3.8.0", "", nil, nil, nil, nil, opensearchv1.MonitoringConfig{})
 
 	assert.Equal(t, map[string]string{"example.com/scrape": "true"}, spec.General.Annotations)
 }

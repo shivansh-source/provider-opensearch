@@ -1,0 +1,31 @@
+# os-monitor-cluster.yaml
+apiVersion: opensearch.org/v1
+kind: OpenSearchCluster
+metadata:
+  name: my-search
+  namespace: default
+spec:
+  general:
+    version: "3.8.0"
+    serviceName: my-search
+    httpPort: 9200
+    monitoring:
+      enable: true
+      monitoringUserSecret: my-search-monitoring-password
+      scrapeInterval: "15s"
+  confMgmt:
+    smartScaler: true
+  security:
+    tls:
+      transport: {generate: true, perNode: true}
+      http: {generate: true}
+  nodePools:
+    - component: nodes
+      replicas: 1
+      diskSize: "5Gi"
+      roles: ["cluster_manager", "data", "ingest"]
+      resources:
+        requests: {cpu: "500m", memory: "2Gi"}
+        limits: {cpu: "1", memory: "2Gi"}
+      persistence:
+        pvc: {accessModes: ["ReadWriteOnce"]}

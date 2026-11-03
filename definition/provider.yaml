@@ -8,9 +8,14 @@ name: opensearch
 # cluster-manager eligible and holds data.
 # dashboards: optional OpenSearch Dashboards deployment, managed by the
 # operator as part of the same OpenSearchCluster.
+# monitoring: optional Prometheus metrics exporter, a plugin + ServiceMonitor
+# toggle on the same OpenSearchCluster rather than a separate deployment.
 components:
   engine:
     type: opensearch
     parametersSchema: OpensearchParameters
   dashboards:
     type: dashboards
+  monitoring:
+    type: monitoring
+    parametersSchema: MonitoringParameters

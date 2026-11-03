@@ -38,6 +38,13 @@ config:
           resources: {}
           replicas: {minimum: 1}
           service: {}
+    monitoring:
+      optional: true
+      # A general.monitoring toggle, not a deployed workload: none of the
+      # base ComponentSpec fields (replicas, storage, resources, service)
+      # apply, only its own parameters (scrapeInterval, pluginUrl).
+      supportedFields:
+        properties: {}
 
 ui:
   sections:

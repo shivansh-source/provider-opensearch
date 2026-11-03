@@ -45,9 +45,9 @@ func validate(c *controller.Context) error {
 	}
 
 	for name := range in.Spec.Components {
-		if name != common.ComponentEngine && name != common.ComponentDashboards {
-			return fmt.Errorf("unsupported component %q: only %q and %q are supported",
-				name, common.ComponentEngine, common.ComponentDashboards)
+		if name != common.ComponentEngine && name != common.ComponentDashboards && name != common.ComponentMonitoring {
+			return fmt.Errorf("unsupported component %q: only %q, %q and %q are supported",
+				name, common.ComponentEngine, common.ComponentDashboards, common.ComponentMonitoring)
 		}
 	}
 	engine, ok := in.Spec.Components[common.ComponentEngine]
@@ -97,6 +97,12 @@ func validate(c *controller.Context) error {
 
 	if dashboards, ok := in.Spec.Components[common.ComponentDashboards]; ok {
 		if err := validateDashboards(spec, dashboards); err != nil {
+			return err
+		}
+	}
+
+	if monitoring, ok := in.Spec.Components[common.ComponentMonitoring]; ok {
+		if _, err := monitoringParametersFromComponent(monitoring); err != nil {
 			return err
 		}
 	}

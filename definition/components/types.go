@@ -19,3 +19,14 @@ type OpensearchParameters struct {
 	// provider and operator manage are rejected.
 	Configuration string `json:"configuration,omitempty"`
 }
+
+// MonitoringParameters defines the parameters for monitoring components.
+type MonitoringParameters struct {
+	// ScrapeInterval is the Prometheus scrape interval, e.g. "30s". Defaults
+	// to the operator's own default (30s) when omitted.
+	ScrapeInterval string `json:"scrapeInterval,omitempty"`
+	// PluginURL overrides where the opensearch-prometheus-exporter plugin is
+	// downloaded from, for air-gapped clusters that cannot reach GitHub
+	// releases.
+	PluginURL string `json:"pluginUrl,omitempty"`
+}
